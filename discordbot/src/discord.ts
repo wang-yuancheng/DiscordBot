@@ -2,7 +2,7 @@ import { Client, GatewayIntentBits } from "discord.js";
 
 let client: Client | null = null;
 
-export async function connectDiscordClient(): Promise<Client> {
+export async function connectDiscordClient(): Promise<void> {
   client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
@@ -19,8 +19,6 @@ export async function connectDiscordClient(): Promise<Client> {
       resolve();
     });
   });
-
-  return client;
 }
 
 export function getDiscordClient(): Client {
