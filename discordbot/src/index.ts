@@ -1,9 +1,12 @@
 import * as dotenv from "dotenv";
-import { connectClient } from "./discord";
-import messageCreate from "./events/messageCreate";
+import { connectDiscordClient, getDiscordClient } from "./discord";
+import { connectRedisClient, getRedisClient } from "./redis";
+import startMessageListener from "./events/messages";
 
 dotenv.config();
-const client = connectClient();
-client.once("ready", () => {
-  messageCreate();
-});
+
+(async () => {
+  await connectRedisClient();
+  await connectDiscordClient();
+  startMessageListener();
+})();

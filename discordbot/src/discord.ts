@@ -2,7 +2,7 @@ import { Client, GatewayIntentBits } from "discord.js";
 
 let client: Client | null = null;
 
-export function connectClient(): Client {
+export async function connectDiscordClient(): Promise<Client> {
   client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
@@ -11,17 +11,19 @@ export function connectClient(): Client {
     ],
   });
 
-  client.once("ready", () => {
-    console.log("✅ Bot is online");
-  });
+  await client.login(process.env.BOT_TOKEN);
 
-  client.login(process.env.BOT_TOKEN);
+  await new Promise<void>((resolve) => {
+    client!.once("ready", () => {
+      console.log("Bot is online");
+      resolve();
+    });
+  });
 
   return client;
 }
 
-// Call getClient() everytime we need client
-export function getClient(): Client {
+export function getDiscordClient(): Client {
   if (!client) {
     throw new Error("Client not initialized");
   }
