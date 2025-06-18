@@ -27,6 +27,7 @@ func RunConsumer(wg *sync.WaitGroup, ctx context.Context, redisClient *redis.Cli
 			log.Printf("[%v] Exiting...", consumer)
 			return
 		default:
+			log.Printf("[worker-%v] Reading from Redis Stream", consumer)
 			streamArray, err := redisClient.XReadGroup(ctx, &redis.XReadGroupArgs{
 				Group:    consumerGroup,
 				Consumer: consumer,
@@ -55,15 +56,20 @@ func RunConsumer(wg *sync.WaitGroup, ctx context.Context, redisClient *redis.Cli
 				for _, msg := range stream.Messages {
 					bwg.Add(1)
 
-					msgID := msg.ID
+					// msgID := msg.ID
 					values := msg.Values
 
 					go func() {
+						defer bwg.Done()
+
 						// Marshal to JSON
 						payload, err := json.Marshal(values)
 						if err != nil {
 							log.Printf("[%s] marshal error: %v", consumer, err)
 							return
+						}
+						if payload != nil {
+							log.Println("Caught payload")
 						}
 
 						// Send to FastAPI
@@ -72,6 +78,7 @@ func RunConsumer(wg *sync.WaitGroup, ctx context.Context, redisClient *redis.Cli
 							log.Printf("[%s] HTTP error: %v", consumer, err)
 							return
 						}
+
 						defer resp.Body.Close()
 
 						// Decode reply
@@ -80,21 +87,25 @@ func RunConsumer(wg *sync.WaitGroup, ctx context.Context, redisClient *redis.Cli
 							log.Printf("[%s] decode error: %v", consumer, err)
 							return
 						}
+						if reply != nil {
+							log.Printf("[%v] %v", consumer, reply["Received"])
+						}
 
 						// Push reply onto outStream
-						if _, err := redisClient.XAdd(ctx, &redis.XAddArgs{
-							Stream: outStream,
-							Values: reply,
-						}).Result(); err != nil {
-							log.Printf("[%s] xadd error: %v", consumer, err)
-						}
+						// if _, err := redisClient.XAdd(ctx, &redis.XAddArgs{
+						// 	Stream: outStream,
+						// 	Values: reply,
+						// }).Result(); err != nil {
+						// 	log.Printf("[%s] xadd error: %v", consumer, err)
+						// }
 
 						// Acknowledge original message
-						if err := redisClient.XAck(ctx, inStream, consumerGroup, msgID).Err(); err != nil {
-							log.Printf("[%s] xack error: %v", consumer, err)
-						}
+						// if err := redisClient.XAck(ctx, inStream, consumerGroup, msgID).Err(); err != nil {
+						// 	log.Printf("[%s] xack error: %v", consumer, err)
+						// }
 					}()
 				}
+
 			}
 			bwg.Wait()
 		}

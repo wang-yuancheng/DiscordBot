@@ -18,7 +18,7 @@ import (
 
 func main() {
 	// Variables
-	inStream := "messageStream"
+	inStream := "test:stream"
 	outStream := "replyStream"
 	consumerGroupName := "messageStreamCG"
 	pollBatch := 5 // maximum number of messages to pull in one XREADGROUP call
@@ -71,6 +71,7 @@ func main() {
 	var wg sync.WaitGroup
 	for i := 1; i <= workers; i++ {
 		wg.Add(1)
+		log.Printf("Starting worker-%v", i)
 		consumerName := "worker-" + strconv.Itoa(i)
 
 		go rdb.RunConsumer(&wg, ctx, redisClient, inStream, outStream, consumerGroupName, consumerName,
