@@ -1,10 +1,12 @@
 import { GuildTextBasedChannel, Message } from "discord.js";
-import { getDiscordClient } from "../discord";
-import { getRedisClient } from "../redis";
+import { getDiscordClient } from "../clients/discord";
+import { getRedisClient } from "../clients/redis";
 
 function isScannable(message: Message): boolean {
-  return !message.author.bot          // skip bots
-      && !!message.guild;             // skip DMs
+  return (
+    !message.author.bot && // skip bots
+    !!message.guild
+  ); // skip DMs
 }
 
 export function startMessageListener() {
@@ -29,11 +31,12 @@ export function sendMessageToRedisStream() {
     }
 
     const messageEntry: Record<string, string> = {
-      id: message.id,
+      messageID: message.id,
       content: String(message.content),
       authorID: message.author?.id ?? "unknown",
       authorUsername: message.author?.username ?? "unknown",
-      authorTimeInServer: message.member?.joinedTimestamp?.toString() ?? "unknown",
+      authorTimeInServer:
+        message.member?.joinedTimestamp?.toString() ?? "unknown",
       channelID: message.channel?.id ?? "unknown",
       channelName: channelName ?? "unknown",
       guildID: message.guild?.id ?? "DM",

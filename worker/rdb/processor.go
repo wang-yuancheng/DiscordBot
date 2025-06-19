@@ -46,12 +46,21 @@ func handleBatch(
 				return
 			}
 			if reply != nil {
-				log.Printf("[%v] %v", consumer, reply["received"])
+				log.Printf("[%v] Message: %v Verdict: %v Probability: %v", consumer, reply["message"], reply["verdict"], reply["probability"])
+			}
+
+			out := map[string]interface{}{
+				"messageID": m.Values["messageID"],
+				"channelID": m.Values["channelID"],
+				"guildID":   m.Values["guildID"],
+			}
+			for k, v := range reply {
+				out[k] = v
 			}
 
 			_ = redisClient.XAdd(ctx, &redis.XAddArgs{
 				Stream: outStream,
-				Values: reply,
+				Values: out,
 			})
 
 			if err := redisClient.XAck(ctx, inStream, consumerGroup, m.ID).Err(); err != nil {

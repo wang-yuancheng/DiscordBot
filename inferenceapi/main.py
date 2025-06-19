@@ -1,11 +1,11 @@
 from typing import Optional, Dict, Any
 from fastapi import FastAPI
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 app = FastAPI()
 
 class MessageEntry(BaseModel):
-    id: str
+    messageID: str
     content: str
     authorID: str
     authorUsername: str
@@ -14,12 +14,18 @@ class MessageEntry(BaseModel):
     channelName: str
     guildID: str
     guildName: str
-    createdTimestamp: int                     # milliseconds since 1970-01-01
+    createdTimestamp: str                     # milliseconds since 1970-01-01
 
 @app.get("/")
 def health():
     return {"status": "alive"}
 
-@app.post("/echo")
+@app.post("/echoold")
 async def echo(entry: MessageEntry) -> Dict[str, Any]:
     return {"received": entry.content}  
+
+@app.post("/echo")
+async def echo(entry: MessageEntry):
+    probability = 0.99
+    message = entry.content
+    return {"message": message, "verdict": str(1), "probability": str(probability)} 

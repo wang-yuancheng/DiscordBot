@@ -1,10 +1,15 @@
 import * as dotenv from "dotenv";
-import { connectDiscordClient, getDiscordClient } from "./discord";
-import { connectRedisClient, getRedisClient } from "./redis";
-import { registerShutdownHooks } from "./shutdown";
-import { startMessageListener, sendMessageToRedisStream } from "./events/messages";
+import { connectDiscordClient, getDiscordClient } from "./clients/discord";
+import { connectRedisClient, getRedisClient } from "./clients/redis";
+import { registerShutdownHooks } from "./utils/shutdown";
+import {
+  startMessageListener,
+  sendMessageToRedisStream,
+} from "./events/messages";
+import { startReplyListener } from "./rdb/consumer";
 
 dotenv.config();
+registerShutdownHooks();
 
 (async () => {
   if (!process.env.BOT_TOKEN || !process.env.REDIS_URL) {
@@ -15,5 +20,5 @@ dotenv.config();
   await connectDiscordClient();
   startMessageListener();
   sendMessageToRedisStream();
-  registerShutdownHooks();
+  startReplyListener();
 })();
