@@ -10,8 +10,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// RunReclaimer reclaims pending entries older than minIdle.
-// It runs once immediately, then every reclaimInterval.
 func RunReclaimer(
 	wg *sync.WaitGroup,
 	ctx context.Context,
@@ -25,7 +23,6 @@ func RunReclaimer(
 ) {
 	defer wg.Done()
 
-	// Helper that performs one reclaim cycle
 	reclaimOnce := func() {
 		log.Printf("[%v] Started...", consumer)
 
@@ -61,7 +58,6 @@ func RunReclaimer(
 		)
 	}
 
-	// Immediate first run
 	reclaimOnce()
 
 	// Periodic runs

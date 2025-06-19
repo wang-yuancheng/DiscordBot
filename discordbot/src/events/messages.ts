@@ -2,12 +2,16 @@ import { GuildTextBasedChannel, Message } from "discord.js";
 import { getDiscordClient } from "../discord";
 import { getRedisClient } from "../redis";
 
+function isScannable(message: Message): boolean {
+  return !message.author.bot          // skip bots
+      && !!message.guild;             // skip DMs
+}
+
 export function startMessageListener() {
   const client = getDiscordClient();
 
-  // Print message to console
   client.on("messageCreate", (message) => {
-    if (message.author.bot) return;
+    if (!isScannable(message)) return;
     console.log(`[${message.author.tag}] ${message.content}`);
   });
 }
@@ -16,10 +20,7 @@ export function sendMessageToRedisStream() {
   const client = getDiscordClient();
 
   client.on("messageCreate", async (message: Message) => {
-    // Ignore message if it's sent by the bot itself or if it's not from a guild
-    if (message.author.id === message.client.user?.id || !message.guild) {
-      return;
-    }
+    if (!isScannable(message)) return;
 
     const channelName = (message.channel as GuildTextBasedChannel)?.name;
     if (!channelName) {
@@ -32,6 +33,7 @@ export function sendMessageToRedisStream() {
       content: String(message.content),
       authorID: message.author?.id ?? "unknown",
       authorUsername: message.author?.username ?? "unknown",
+      authorTimeInServer: message.member?.joinedTimestamp?.toString() ?? "unknown",
       channelID: message.channel?.id ?? "unknown",
       channelName: channelName ?? "unknown",
       guildID: message.guild?.id ?? "DM",
@@ -44,7 +46,7 @@ export function sendMessageToRedisStream() {
       await redisClient.xAdd("messageStream", "*", messageEntry);
       console.log("Message added to Redis stream");
     } catch (err) {
-      console.error("❌ Failed to add message to Redis stream:", err);
+      console.error("Failed to add message to Redis stream:", err);
     }
   });
 }

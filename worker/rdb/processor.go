@@ -11,8 +11,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// handleBatch sends each XMessage to FastAPI, then ACKs it.
-// Uncomment the XAdd block if you want to forward replies.
 func handleBatch(
 	ctx context.Context,
 	msgs []redis.XMessage,
@@ -48,14 +46,13 @@ func handleBatch(
 				return
 			}
 			if reply != nil {
-				log.Printf("[%v] %v", consumer, reply["Received"])
+				log.Printf("[%v] %v", consumer, reply["received"])
 			}
 
-			// Optional: forward reply to another stream
-			// _, _ = redisClient.XAdd(ctx, &redis.XAddArgs{
-			// 	Stream: outStream,
-			// 	Values: reply,
-			// })
+			_ = redisClient.XAdd(ctx, &redis.XAddArgs{
+				Stream: outStream,
+				Values: reply,
+			})
 
 			if err := redisClient.XAck(ctx, inStream, consumerGroup, m.ID).Err(); err != nil {
 				log.Printf("[%s] XACK error: %v", consumer, err)

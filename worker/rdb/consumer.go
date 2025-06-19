@@ -10,11 +10,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-/*
-RunConsumer continuously:
- 1. XREADGROUPs a batch from <inStream>
- 2. Passes the messages to handleBatch
-*/
 func RunConsumer(
 	wg *sync.WaitGroup,
 	ctx context.Context,
