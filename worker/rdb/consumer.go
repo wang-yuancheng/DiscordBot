@@ -69,7 +69,7 @@ func RunConsumer(wg *sync.WaitGroup, ctx context.Context, redisClient *redis.Cli
 							return
 						}
 						if payload != nil {
-							log.Println("Caught payload")
+							log.Printf("Caught payload: %v", payload)
 						}
 
 						// Send to FastAPI

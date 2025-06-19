@@ -18,13 +18,13 @@ import (
 
 func main() {
 	// Variables
-	inStream := "test:stream"
+	inStream := "messageStream"
 	outStream := "replyStream"
 	consumerGroupName := "messageStreamCG"
 	pollBatch := 5 // maximum number of messages to pull in one XREADGROUP call
 	blockMS := 3000 // time XREADGROUP is willing to block waiting for new entries
 	httpTimeout := time.Duration(10) * time.Second // reusable client used for every POST to FastAPI
-	workers := 4
+	workers := 2
 
 	// Load environment variables
 	err := godotenv.Load(".env")

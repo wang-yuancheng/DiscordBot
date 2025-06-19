@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 import { connectDiscordClient, getDiscordClient } from "./discord";
 import { connectRedisClient, getRedisClient } from "./redis";
 import { registerShutdownHooks } from "./shutdown";
-import startMessageListener from "./events/messages";
+import { startMessageListener, sendMessageToRedisStream } from "./events/messages";
 
 dotenv.config();
 
@@ -14,5 +14,6 @@ dotenv.config();
   await connectRedisClient();
   await connectDiscordClient();
   startMessageListener();
+  sendMessageToRedisStream();
   registerShutdownHooks();
 })();
