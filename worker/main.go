@@ -17,18 +17,26 @@ import (
 )
 
 func main() {
-	// Variables
+	// Streams and consumer-group
 	inStream := "messageStream"
 	outStream := "replyStream"
 	consumerGroupName := "messageStreamCG"
-	pollBatch := 5 // maximum number of messages to pull in one XREADGROUP call
-	blockMS := 3000 // time XREADGROUP is willing to block waiting for new entries
-	httpTimeout := time.Duration(10) * time.Second // reusable client used for every POST to FastAPI
-	workers := 2
 
-	// Load environment variables
-	err := godotenv.Load(".env")
-	if err != nil {
+	// Worker settings
+	pollBatch := 5                     // XREADGROUP batch size
+	blockMS := 3000                    // XREADGROUP block time
+	workers := 2                       // regular consumers
+
+	// Reclaimer settings
+	minIdle := 100 * time.Second       // message must be idle this long to be reclaimed
+	reclaimBatch := 50                 // XAUTOCLAIM batch size
+	reclaimInterval := 5 * time.Minute // how often the reclaimer wakes
+
+	// HTTP
+	httpTimeout := 10 * time.Second // FastAPI request timeout
+
+	// Load environment
+	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
@@ -36,7 +44,6 @@ func main() {
 	if redisURL == "" {
 		log.Fatal("REDIS_URL is not found in the environment")
 	}
-
 	opt, err := redis.ParseURL(redisURL)
 	if err != nil {
 		log.Fatalf("Bad REDIS_URL: %v", err)
@@ -47,44 +54,51 @@ func main() {
 		log.Fatal("FASTAPI_URL is not found in the environment")
 	}
 
-	// Start a context
+	// Context with cancel
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Connect to Redis Client
+	// Redis client
 	redisClient := redis.NewClient(opt)
 	defer redisClient.Close()
 
-	_, err = redisClient.Ping(ctx).Result()
-	if err != nil {
+	if _, err := redisClient.Ping(ctx).Result(); err != nil {
 		log.Fatalf("Error pinging Redis client: %v", err)
 	}
 	log.Println("Connected to Redis")
 
-	// Create and verify consumer-group
+	// Ensure consumer-group exists
 	rdb.CreateConsumerGroup(ctx, redisClient, inStream, consumerGroupName)
 
 	// Shared HTTP client
 	httpClient := &http.Client{Timeout: httpTimeout}
 
-	// Launch workers
+	// Launch consumers
 	var wg sync.WaitGroup
 	for i := 1; i <= workers; i++ {
 		wg.Add(1)
-		log.Printf("Starting worker-%v", i)
 		consumerName := "worker-" + strconv.Itoa(i)
+		log.Printf("Starting %v", consumerName)
 
-		go rdb.RunConsumer(&wg, ctx, redisClient, inStream, outStream, consumerGroupName, consumerName,
+		go rdb.RunConsumer(&wg, ctx, redisClient, inStream, outStream,
+			consumerGroupName, consumerName,
 			pollBatch, time.Duration(blockMS)*time.Millisecond,
 			httpClient, fastAPI)
 	}
 
-	// Graceful Shutdown
+	// Launch reclaimer
+	wg.Add(1)
+	go rdb.RunReclaimer(&wg, ctx, redisClient, inStream, outStream,
+		consumerGroupName, "reclaimer",
+		minIdle, reclaimBatch, reclaimInterval,
+		httpClient, fastAPI)
+
+	// Graceful shutdown
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-  
+
 	<-sigCh
-	cancel()  // stop consumers
-	wg.Wait() // wait for them to exit
+	cancel()   // stop goroutines
+	wg.Wait()  // wait for them
 	log.Println("Shutdown complete")
 }
