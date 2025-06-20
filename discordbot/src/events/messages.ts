@@ -46,7 +46,14 @@ export function sendMessageToRedisStream() {
 
     const redisClient = getRedisClient();
     try {
-      await redisClient.xAdd("messageStream", "*", messageEntry);
+      await redisClient.xAdd("messageStream", "*", messageEntry, {
+        // trim to prevent redis memory increasing infinitely
+        TRIM: {
+          strategy: "MAXLEN", 
+          strategyModifier: "~", 
+          threshold: 500_000,
+        },
+      });
       console.log("Message added to Redis stream");
     } catch (err) {
       console.error("Failed to add message to Redis stream:", err);

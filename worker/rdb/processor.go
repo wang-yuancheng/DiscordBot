@@ -60,6 +60,9 @@ func handleBatch(
 
 			_ = redisClient.XAdd(ctx, &redis.XAddArgs{
 				Stream: outStream,
+				ID:     "*",     
+				MaxLen: 500_000,
+				Approx: true,   
 				Values: out,
 			})
 
