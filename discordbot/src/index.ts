@@ -1,4 +1,4 @@
-import * as dotenv from "dotenv";
+import "dotenv/config"; 
 import { connectDiscordClient, getDiscordClient } from "./clients/discord";
 import { connectRedisClient, getRedisClient } from "./clients/redis";
 import { registerShutdownHooks } from "./utils/shutdown";
@@ -7,8 +7,9 @@ import {
   sendMessageToRedisStream,
 } from "./events/messages";
 import { startReplyListener } from "./rdb/consumer";
+import { startInteractionListener } from "./events/executeCommands";
+import { registerCommandsInGuild } from "./utils/registerGuildCommands";
 
-dotenv.config();
 registerShutdownHooks();
 
 (async () => {
@@ -18,6 +19,20 @@ registerShutdownHooks();
   }
   await connectRedisClient();
   await connectDiscordClient();
+
+  const client = getDiscordClient();
+
+  // register commands for all guilds bot is already in
+  for (const [, guild] of client.guilds.cache) {
+    await registerCommandsInGuild(guild);
+  }
+
+  // register commands for new guilds bot just joined
+  client.on("guildCreate", async (guild) => {
+    await registerCommandsInGuild(guild);
+  });
+
+  startInteractionListener();
   startMessageListener();
   sendMessageToRedisStream();
   startReplyListener();

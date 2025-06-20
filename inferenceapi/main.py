@@ -28,4 +28,4 @@ async def echo(entry: MessageEntry) -> Dict[str, Any]:
 async def echo(entry: MessageEntry):
     probability = 0.99
     message = entry.content
-    return {"message": message, "verdict": str(1), "probability": str(probability)} 
+    return {"message": message, "verdict": str(2), "probability": str(probability)} 
