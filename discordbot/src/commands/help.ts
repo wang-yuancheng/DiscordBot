@@ -3,7 +3,7 @@ import {
   ChatInputCommandInteraction,
   MessageFlags,
 } from "discord.js";
-import { buildHelpEmbed } from "../embeds/helpEmbed";
+import { buildHelpEmbed } from "../utils/create-embed";
 
 const command = new SlashCommandBuilder()
   .setName("help")

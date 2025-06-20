@@ -1,6 +1,6 @@
 import { getDiscordClient } from "../clients/discord";
 import { GuildTextBasedChannel } from "discord.js";
-import { getModChannelID } from "../utils/modChannel";
+import { getModChannelID } from "../utils/mod-channel";
 
 const MOD_CHANNEL_ID = process.env.MOD_CHANNEL_ID ?? "";
 

@@ -5,10 +5,10 @@ import { registerShutdownHooks } from "./utils/shutdown";
 import {
   startMessageListener,
   sendMessageToRedisStream,
-} from "./events/messages";
-import { startReplyListener } from "./redis-streams/consumer";
-import { startInteractionListener } from "./events/executeCommands";
-import { registerCommandsInGuild } from "./utils/registerGuildCommands";
+} from "./events/listen-messages";
+import { startReplyListener } from "./rdb/consumer";
+import { startInteractionListener } from "./events/execute-commands";
+import { registerCommandsInGuild } from "./utils/register-guild-commands";
 
 registerShutdownHooks();
 

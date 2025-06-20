@@ -1,6 +1,6 @@
 import { getRedisClient } from "../clients/redis";
 import { handleVerdict } from "./processor";
-import { createConsumerGroup, readGroup, ack } from "./consumerGroup";
+import { createConsumerGroup, readGroup, ack } from "./consumer-group";
 
 const STREAM_KEY   = "replyStream";
 const GROUP_NAME   = "replyStreamCG";

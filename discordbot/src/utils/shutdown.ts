@@ -1,6 +1,6 @@
 import { getRedisClient } from "../clients/redis";
 import { getDiscordClient } from "../clients/discord";
-import { stopReplyListener } from "../redis-streams/consumer";
+import { stopReplyListener } from "../rdb/consumer";
 
 let shuttingDown = false;
 
