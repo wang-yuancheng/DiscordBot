@@ -1,4 +1,4 @@
-import "dotenv/config"; 
+import "dotenv/config";
 import { connectDiscordClient, getDiscordClient } from "./clients/discord";
 import { connectRedisClient, getRedisClient } from "./clients/redis";
 import { registerShutdownHooks } from "./utils/shutdown";
@@ -6,7 +6,7 @@ import {
   startMessageListener,
   sendMessageToRedisStream,
 } from "./events/messages";
-import { startReplyListener } from "./rdb/consumer";
+import { startReplyListener } from "./redis-streams/consumer";
 import { startInteractionListener } from "./events/executeCommands";
 import { registerCommandsInGuild } from "./utils/registerGuildCommands";
 

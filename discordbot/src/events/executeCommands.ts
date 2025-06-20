@@ -1,6 +1,7 @@
 import { MessageFlags } from "discord.js";
 import { getDiscordClient } from "../clients/discord";
 import { setModChannelExecute } from "../commands/setModChannel";
+import { helpExecute } from "../commands/help";
 
 export function startInteractionListener(): void {
   const client = getDiscordClient();
@@ -12,6 +13,9 @@ export function startInteractionListener(): void {
       switch (interaction.commandName) {
         case "setmodchannel":
           await setModChannelExecute(interaction);
+          break;
+        case "help":                                 
+          await helpExecute(interaction);
           break;
         default:
           await interaction.reply({

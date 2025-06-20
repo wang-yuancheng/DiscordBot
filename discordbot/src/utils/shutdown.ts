@@ -1,19 +1,19 @@
-import { getRedisClient }   from "../clients/redis";
+import { getRedisClient } from "../clients/redis";
 import { getDiscordClient } from "../clients/discord";
-import { stopReplyListener } from "../rdb/consumer";
+import { stopReplyListener } from "../redis-streams/consumer";
 
-let shuttingDown = false;           
+let shuttingDown = false;
 
 export function registerShutdownHooks(): void {
-  process.on("SIGINT",  shutdown);
+  process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
 }
 
 async function shutdown(): Promise<void> {
-  if (shuttingDown) return;         // ignore second signal
+  if (shuttingDown) return; // ignore second signal
   shuttingDown = true;
 
-  stopReplyListener();              
+  stopReplyListener();
 
   const discord = getDiscordClient();
   if (discord.isReady()) {
