@@ -1,4 +1,4 @@
-import { GuildTextBasedChannel, Message } from "discord.js";
+import { GuildTextBasedChannel, Message, MessageType } from "discord.js";
 import { getDiscordClient } from "../clients/discord";
 import { getRedisClient } from "../clients/redis";
 
@@ -44,16 +44,19 @@ export function sendMessageToRedisStream() {
       // createTimestamp: milliseconds since Jan 1, 1970 (Unix epoch)
       msgCreatedTimestamp: message.createdTimestamp.toString(),
       // authorTimeInServer: milliseconds since Jan 1, 1970 (Unix epoch)
-      authorTimeInServer: message.member?.joinedTimestamp?.toString() ?? "unknown",
+      authorTimeInServer:
+        message.member?.joinedTimestamp?.toString() ?? "unknown",
       messageLength: message.content.length.toString(),
       wordCount: message.content.trim().split(/\s+/).length.toString(),
       hasLink: /https?:\/\//i.test(message.content) ? "1" : "0",
-      hasMention: message.mentions.users.size > 0 || message.mentions.roles.size > 0
+      hasMention:
+        message.mentions.users.size > 0 || message.mentions.roles.size > 0
           ? "1"
           : "0",
       numRoles: message.member
         ? message.member.roles.cache.size.toString()
         : "0",
+      isDefaultMessage: message.type === MessageType.Default ? "0" : "1", // "0" ordinary text, "1" system, sticker or forwarded message
     };
 
     const redisClient = getRedisClient();
