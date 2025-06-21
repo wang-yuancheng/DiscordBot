@@ -5,16 +5,23 @@ from pydantic import BaseModel
 app = FastAPI()
 
 class MessageEntry(BaseModel):
-    messageID: str
+    message_ID: str
+    author_ID: str
+    author_username: str
+    channel_ID: str
+    channel_name: str
+    guild_ID: str
+    guild_name: str
     content: str
-    authorID: str
-    authorUsername: str
-    authorTimeInServer: Optional[str] = None  # may be "unknown" if member has left
-    channelID: str
-    channelName: str
-    guildID: str
-    guildName: str
-    createdTimestamp: str                     # milliseconds since 1970-01-01
+    msg_timestamp: str                         # milliseconds since 1970-01-01
+    joined_timestamp: Optional[str] = None     # may be "unknown" if member has left
+    time_since_join: str
+    message_length: str
+    word_count: str
+    has_link: str
+    has_mention: str
+    num_roles: str
+    
 
 @app.get("/")
 def health():

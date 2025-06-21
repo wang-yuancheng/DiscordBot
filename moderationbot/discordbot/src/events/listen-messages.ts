@@ -32,16 +32,28 @@ export function sendMessageToRedisStream() {
 
     const messageEntry: Record<string, string> = {
       messageID: message.id,
-      content: String(message.content),
       authorID: message.author?.id ?? "unknown",
       authorUsername: message.author?.username ?? "unknown",
-      authorTimeInServer:
-        message.member?.joinedTimestamp?.toString() ?? "unknown",
       channelID: message.channel?.id ?? "unknown",
       channelName: channelName ?? "unknown",
       guildID: message.guild?.id ?? "DM",
       guildName: message.guild?.name ?? "Direct Message",
-      createdTimestamp: message.createdTimestamp.toString(),
+
+      // ------ Attributes machine learning model expects are below -------
+      content: String(message.content),
+      // createTimestamp: milliseconds since Jan 1, 1970 (Unix epoch)
+      msgCreatedTimestamp: message.createdTimestamp.toString(),
+      // authorTimeInServer: milliseconds since Jan 1, 1970 (Unix epoch)
+      authorTimeInServer: message.member?.joinedTimestamp?.toString() ?? "unknown",
+      messageLength: message.content.length.toString(),
+      wordCount: message.content.trim().split(/\s+/).length.toString(),
+      hasLink: /https?:\/\//i.test(message.content) ? "1" : "0",
+      hasMention: message.mentions.users.size > 0 || message.mentions.roles.size > 0
+          ? "1"
+          : "0",
+      numRoles: message.member
+        ? message.member.roles.cache.size.toString()
+        : "0",
     };
 
     const redisClient = getRedisClient();
@@ -49,8 +61,8 @@ export function sendMessageToRedisStream() {
       await redisClient.xAdd("messageStream", "*", messageEntry, {
         // trim to prevent redis memory increasing infinitely
         TRIM: {
-          strategy: "MAXLEN", 
-          strategyModifier: "~", 
+          strategy: "MAXLEN",
+          strategyModifier: "~",
           threshold: 500_000,
         },
       });
